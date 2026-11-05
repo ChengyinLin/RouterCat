@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RouterCat · 路由器监控</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%230d1421'/><circle cx='32' cy='40' r='6' fill='%234f8cff'/><path d='M20 30a17 17 0 0 1 24 0' stroke='%234f8cff' stroke-width='4' fill='none' stroke-linecap='round'/><path d='M13 22a27 27 0 0 1 38 0' stroke='%232fd6a5' stroke-width='4' fill='none' stroke-linecap='round'/></svg>">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" width="34" height="34">
+          <rect width="40" height="40" rx="11" fill="url(#lg)"/>
+          <circle cx="20" cy="25" r="3.4" fill="#0b1120"/>
+          <path d="M13 18.5a10 10 0 0 1 14 0" stroke="#0b1120" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <path d="M8.2 13.2a17 17 0 0 1 23.6 0" stroke="#0b1120" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".75"/>
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#4f8cff"/><stop offset="1" stop-color="#2fd6a5"/></linearGradient></defs>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">RouterCat</div>
+        <div class="brand-sub" id="brand-sub" data-i18n="路由器状态监控">路由器状态监控</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="overview">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+        <span data-i18n="总览">总览</span>
+      </button>
+      <button class="nav-item" data-view="router">
+        <svg viewBox="0 0 24 24"><path d="M3.5 9.5a13 13 0 0 1 17 0"/><path d="M6.8 13a8 8 0 0 1 10.4 0"/><path d="M10 16.4a3.6 3.6 0 0 1 4 0"/><circle cx="12" cy="19.2" r="1.3" fill="currentColor" stroke="none"/></svg>
+        <span data-i18n="路由器">路由器</span>
+      </button>
+      <button class="nav-item" data-view="network">
+        <svg viewBox="0 0 24 24"><path d="M3 16.5l4.5-5 3.5 3 4-7 6 5.5"/><path d="M3 20.5h18"/></svg>
+        <span data-i18n="网络与主机">网络与主机</span>
+      </button>
+      <button class="nav-item" data-view="devices">
+        <svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M8 20.5h8"/><path d="M12 16.5v4"/></svg>
+        <span data-i18n="设备发现">设备发现</span>
+      </button>
+      <button class="nav-item" data-view="speedtest">
+        <svg viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4.2-5.6"/><circle cx="12" cy="18" r="1.4" fill="currentColor" stroke="none"/></svg>
+        <span data-i18n="测网速">测网速</span>
+      </button>
+      <button class="nav-item" data-view="events">
+        <svg viewBox="0 0 24 24"><path d="M6 9.5a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13.5 6 9.5z"/><path d="M10 18.5a2.2 2.2 0 0 0 4 0"/></svg>
+        <span data-i18n="事件与告警">事件与告警</span>
+        <em class="badge" id="alert-badge" hidden>0</em>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2.2"/><path d="M4 12h4"/><path d="M12 12h8"/><circle cx="10" cy="12" r="2.2"/><path d="M4 17h8"/><path d="M16 17h4"/><circle cx="14" cy="17" r="2.2"/></svg>
+        <span data-i18n="设置">设置</span>
+      </button>
+    </nav>
+
+    <div class="side-foot">
+      <div class="side-status" id="side-status">
+        <span class="dot"></span><span id="side-status-text" data-i18n="正在连接…">正在连接…</span>
+      </div>
+      <div class="side-meta" id="side-meta">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title-wrap">
+        <h1 id="page-title">总览</h1>
+        <p class="sub" id="page-sub">路由器与链路实时状态</p>
+      </div>
+      <div class="top-actions">
+        <div class="segmented" id="range-picker">
+          <button data-range="5m" data-i18n="5分">5分</button>
+          <button data-range="30m" class="active" data-i18n="30分">30分</button>
+          <button data-range="1h" data-i18n="1时">1时</button>
+          <button data-range="6h" data-i18n="6时">6时</button>
+          <button data-range="24h" data-i18n="24时">24时</button>
+        </div>
+        <div class="live" id="live-pill"><span class="live-dot"></span><span data-i18n="实时">实时</span></div>
+      </div>
+    </header>
+
+    <!-- ==================== 总览 ==================== -->
+    <section class="view active" id="view-overview">
+      <div class="grid">
+        <article class="card hero col-8">
+          <div class="hero-main">
+            <div class="row-between">
+              <span class="label"><span data-i18n="路由器网关">路由器网关</span> <span class="mono dim" id="gw-ip">--</span></span>
+              <span class="pill" id="router-pill"><i></i><span data-i18n="检测中">检测中</span></span>
+            </div>
+            <div class="hero-value">
+              <span class="hero-num" id="gw-latency">--</span><span class="hero-unit">ms</span>
+            </div>
+            <div class="hero-caption" data-i18n="网关延迟 · 近 5 分钟平均">网关延迟 · 近 5 分钟平均</div>
+            <div class="hero-chips">
+              <div class="chip"><span data-i18n="丢包">丢包</span><b id="gw-loss">--</b></div>
+              <div class="chip"><span data-i18n="抖动">抖动</span><b id="gw-jitter">--</b></div>
+              <div class="chip"><span>P95</span><b id="gw-p95">--</b></div>
+              <div class="chip"><span data-i18n="探测">探测</span><b id="gw-count">--</b></div>
+            </div>
+          </div>
+          <div class="hero-spark">
+            <canvas id="hero-spark"></canvas>
+            <div class="spark-label" data-i18n="近 10 分钟">近 10 分钟</div>
+          </div>
+        </article>
+
+        <article class="card col-4">
+          <div class="card-head">
+            <h3 data-i18n="本机负载">本机负载</h3>
+            <span class="hint" id="host-uptime">--</span>
+          </div>
+          <div class="rings" id="rings"></div>
+          <div class="load-row">
+            <div><span data-i18n="负载">负载</span><b id="host-load">--</b></div>
+            <div><span data-i18n="温度">温度</span><b id="host-temp">--</b></div>
+            <div><span data-i18n="磁盘">磁盘</span><b id="host-proc">--</b></div>
+          </div>
+        </article>
+
+        <article class="card col-8">
+          <div class="card-head">
+            <h3 data-i18n="延迟趋势">延迟趋势</h3>
+            <div class="legend" id="latency-legend"></div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="chart-latency"></canvas></div>
+        </article>
+
+        <article class="card col-4">
+          <div class="card-head"><h3 data-i18n="链路质量">链路质量</h3><span class="hint" id="quality-hint" data-i18n="24 小时">24 小时</span></div>
+          <div class="quality" id="quality"></div>
+        </article>
+
+        <article class="card col-7">
+          <div class="card-head">
+            <h3 data-i18n="带宽">带宽</h3>
+            <div class="head-actions">
+              <div class="legend" id="bw-legend"></div>
+              <span class="hint" id="bw-hint">--</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-bandwidth"></canvas></div>
+        </article>
+
+        <article class="card col-5">
+          <div class="card-head">
+            <h3 data-i18n="最近事件">最近事件</h3>
+            <button class="link" data-goto="events" data-i18n="查看全部">查看全部</button>
+          </div>
+          <div class="event-list" id="overview-events"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== 路由器 ==================== -->
+    <section class="view" id="view-router">
+      <div class="grid">
+        <article class="card col-12 device-hero">
+          <div class="device-visual">
+            <img id="router-img" src="/img/router.png" alt="路由器">
+          </div>
+          <div class="device-info">
+            <div class="device-head">
+              <h2 id="router-name">路由器</h2>
+              <span class="pill" id="router-status-pill"><i></i><span data-i18n="检测中">检测中</span></span>
+              <button class="identify-btn" id="router-identify" type="button"
+                      data-i18n-title="重新识别路由器型号" title="重新识别路由器型号">
+                <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+                  <path d="M12 5V2.8L8.6 6.2 12 9.6V7.4a4.6 4.6 0 1 1-4.4 5.9" />
+                  <path d="M4.6 13.3A7.4 7.4 0 0 0 12 19.4" opacity=".45" />
+                </svg>
+                <span id="router-identify-label" data-i18n="自动识别">自动识别</span>
+              </button>
+            </div>
+            <div class="device-addr mono" id="router-addr">--</div>
+            <div class="device-meta" id="router-meta"></div>
+            <div class="device-stats">
+              <div><span data-i18n="延迟">延迟</span><b id="dev-lat">--</b></div>
+              <div><span data-i18n="丢包">丢包</span><b id="dev-loss">--</b></div>
+              <div><span data-i18n="抖动">抖动</span><b id="dev-jitter">--</b></div>
+              <div><span data-i18n="24h 可用率">24h 可用率</span><b id="dev-avail">--</b></div>
+              <div><span data-i18n="路由器运行">路由器运行</span><b id="dev-uptime">--</b></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card col-4">
+          <div class="card-head"><h3 data-i18n="网关信息">网关信息</h3><span class="hint" id="gw-mode" data-i18n="自动探测">自动探测</span></div>
+          <dl class="kv" id="gw-info"></dl>
+        </article>
+
+        <article class="card col-8">
+          <div class="card-head"><h3 data-i18n="连通性探测">连通性探测</h3><span class="hint" data-i18n="实时结果">实时结果</span></div>
+          <table class="table" id="probe-table">
+            <thead><tr>
+              <th data-i18n="目标">目标</th><th data-i18n="类型">类型</th><th data-i18n="状态">状态</th>
+              <th class="num" data-i18n="延迟">延迟</th><th class="num" data-i18n="丢包">丢包</th><th data-i18n="详情">详情</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="网关延迟">网关延迟</h3><div class="legend" id="router-legend"></div></div>
+          <div class="chart-wrap"><canvas id="chart-router-latency"></canvas></div>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="外网延迟">外网延迟</h3><div class="legend" id="wan-legend"></div></div>
+          <div class="chart-wrap"><canvas id="chart-wan-latency"></canvas></div>
+        </article>
+
+        <article class="card col-12">
+          <div class="card-head"><h3 data-i18n="丢包率对比">丢包率对比</h3><span class="hint" id="loss-hint" data-i18n="近 5 分钟">近 5 分钟</span></div>
+          <div class="bars" id="loss-bars"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== 网络与主机 ==================== -->
+    <section class="view" id="view-network">
+      <div class="grid">
+        <article class="card col-12 host-hero">
+          <div class="host-visual">
+            <div class="os-badge" id="host-os-badge">L</div>
+          </div>
+          <div class="device-info">
+            <div class="device-head">
+              <h2 id="host-os-name" data-i18n="本机系统">本机系统</h2>
+              <span class="pill" id="host-virt-pill"><i></i>--</span>
+              <span class="hint" id="host-os-kind"></span>
+            </div>
+            <div class="device-addr mono" id="host-kernel-line">--</div>
+            <div class="device-meta" id="host-meta"></div>
+            <div class="device-stats">
+              <div><span data-i18n="开机时长">开机时长</span><b id="host-uptime2">--</b></div>
+              <div><span>CPU</span><b id="host-cpu-model">--</b></div>
+              <div><span data-i18n="核心数">核心数</span><b id="host-cores">--</b></div>
+              <div><span data-i18n="内存">内存</span><b id="host-mem-total">--</b></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card col-12">
+          <div class="card-head"><h3 data-i18n="网卡速率">网卡速率</h3><div class="legend" id="net-legend"></div></div>
+          <div class="chart-wrap tall"><canvas id="chart-net"></canvas></div>
+        </article>
+
+        <article class="card col-7">
+          <div class="card-head"><h3 data-i18n="网卡列表">网卡列表</h3><span class="hint" id="iface-count">--</span></div>
+          <table class="table" id="iface-table">
+            <thead><tr>
+              <th data-i18n="接口">接口</th><th data-i18n="地址">地址</th><th data-i18n="状态">状态</th>
+              <th class="num" data-i18n="下行">下行</th><th class="num" data-i18n="上行">上行</th>
+              <th class="num" data-i18n="累计">累计</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </article>
+
+        <article class="card col-5">
+          <div class="card-head"><h3 data-i18n="磁盘读写">磁盘读写</h3><div class="legend" id="disk-legend"></div></div>
+          <div class="chart-wrap"><canvas id="chart-disk"></canvas></div>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="磁盘空间">磁盘空间</h3></div>
+          <div class="disk-list" id="disk-list"></div>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="CPU 占用进程">CPU 占用进程</h3><span class="hint" data-i18n="前 8 位">前 8 位</span></div>
+          <table class="table compact" id="proc-table">
+            <thead><tr>
+              <th data-i18n="进程">进程</th><th class="num">PID</th><th class="num">CPU</th><th class="num" data-i18n="内存">内存</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== 设备发现 ==================== -->
+    <section class="view" id="view-devices">
+      <article class="card">
+        <div class="card-head">
+          <h3><span data-i18n="已发现设备">已发现设备</span> <span class="count" id="dev-count">0</span></h3>
+          <div class="head-actions">
+            <span class="hint" id="dev-hint"></span>
+            <button class="btn" id="scan-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+              <span data-i18n="扫描网段">扫描网段</span>
+            </button>
+          </div>
+        </div>
+        <table class="table" id="dev-table">
+          <thead><tr>
+            <th data-i18n="状态">状态</th><th data-i18n="IP 地址">IP 地址</th><th>MAC</th>
+            <th data-i18n="接口">接口</th><th data-i18n="主机名">主机名</th><th class="num" data-i18n="最近在线">最近在线</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </article>
+    </section>
+
+    <!-- ==================== 测网速 ==================== -->
+    <section class="view" id="view-speedtest">
+      <div class="grid">
+        <article class="card col-8 speed-card">
+          <div class="card-head">
+            <h3 data-i18n="网速测试">网速测试</h3>
+            <span class="hint" id="st-hint" data-i18n="点击开始，约需 15 秒">点击开始，约需 15 秒</span>
+          </div>
+          <div class="speed-metrics">
+            <div class="speed-metric">
+              <span class="sm-label"><i class="dir down">↓</i><span data-i18n="下行">下行</span></span>
+              <div class="sm-value"><b id="st-down">--</b><em>Mbps</em></div>
+            </div>
+            <div class="speed-metric">
+              <span class="sm-label"><i class="dir up">↑</i><span data-i18n="上行">上行</span></span>
+              <div class="sm-value"><b id="st-up">--</b><em>Mbps</em></div>
+            </div>
+          </div>
+          <div class="speed-progress"><div class="speed-bar" id="st-bar"></div></div>
+          <div class="speed-foot">
+            <button class="btn primary" id="st-start" data-i18n="开始测速">开始测速</button>
+            <span class="speed-phase" id="st-phase" data-i18n="准备就绪">准备就绪</span>
+          </div>
+        </article>
+
+        <article class="card col-4">
+          <div class="card-head"><h3 data-i18n="延迟对比">延迟对比</h3><span class="hint" id="st-server">--</span></div>
+          <div class="lat-compare" id="st-latency"></div>
+          <div class="st-note" id="st-note" data-i18n="空闲延迟取自最近 1 分钟的探测记录">空闲延迟取自最近 1 分钟的探测记录</div>
+        </article>
+
+        <article class="card col-12">
+          <div class="card-head"><h3 data-i18n="历史记录">历史记录</h3><span class="hint" data-i18n="最近 10 次">最近 10 次</span></div>
+          <table class="table" id="st-history">
+            <thead><tr>
+              <th data-i18n="时间">时间</th><th class="num" data-i18n="下行">下行</th><th class="num" data-i18n="上行">上行</th>
+              <th class="num" data-i18n="延迟 空闲/负载">延迟 空闲/负载</th><th data-i18n="测试服务器">测试服务器</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </article>
+      </div>
+    </section>
+
+    <!-- ==================== 事件 ==================== -->
+    <section class="view" id="view-events">
+      <article class="card">
+        <div class="card-head">
+          <h3 data-i18n="事件记录">事件记录</h3>
+          <div class="chips-filter" id="event-filter">
+            <button class="on" data-filter="all" data-i18n="全部">全部</button>
+            <button data-filter="open" data-i18n="进行中">进行中</button>
+            <button data-filter="critical" data-i18n="严重">严重</button>
+            <button data-filter="warning" data-i18n="警告">警告</button>
+          </div>
+        </div>
+        <div class="event-list large" id="event-list"></div>
+      </article>
+    </section>
+
+    <!-- ==================== 设置 ==================== -->
+    <section class="view" id="view-settings">
+      <div class="grid">
+        <article class="card col-12 lang-card">
+          <div class="lang-row">
+            <div class="lang-copy">
+              <h3 data-i18n="界面语言">界面语言</h3>
+              <p class="hint" data-i18n="选择只记在这台浏览器上；「自动」跟随浏览器语言">选择只记在这台浏览器上；「自动」跟随浏览器语言</p>
+            </div>
+            <div class="segmented lang-switch" id="lang-switch" role="group" aria-label="Language">
+              <button type="button" data-lang="auto" data-i18n="自动">自动</button>
+              <button type="button" data-lang="zh">中文</button>
+              <button type="button" data-lang="en">English</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="监控配置">监控配置</h3><span class="hint" data-i18n="保存后立即生效">保存后立即生效</span></div>
+          <form class="form" id="settings-form">
+            <label class="field"><span data-i18n="路由器网关（设置）">路由器网关</span>
+              <input name="router.gateway" data-i18n-ph="auto 或 192.168.1.1" placeholder="auto 或 192.168.1.1">
+              <em data-i18n="auto 表示跟随系统默认路由自动探测">auto 表示跟随系统默认路由自动探测</em>
+            </label>
+            <label class="field"><span data-i18n="路由器名称">路由器名称</span>
+              <input name="router.name" data-i18n-ph="留空 = 自动识别型号" placeholder="留空 = 自动识别型号">
+              <em data-i18n="留空则显示自动识别到的型号；填了就以你写的为准">留空则显示自动识别到的型号；填了就以你写的为准</em>
+            </label>
+            <div class="field-row">
+              <label class="field"><span data-i18n="自动识别型号">自动识别型号</span>
+                <select name="router.auto_detect" data-type="bool">
+                  <option value="true" data-i18n="开启">开启</option>
+                  <option value="false" data-i18n="关闭">关闭</option>
+                </select>
+              </label>
+              <label class="field"><span data-i18n="识别缓存（小时）">识别缓存（小时）</span>
+                <input name="router.detect_ttl" type="number" min="0" max="720" step="1"
+                       data-scale="3600" placeholder="6">
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span data-i18n="网关探测间隔（秒）">网关探测间隔（秒）</span><input name="probe.gateway_interval" type="number" min="1" max="60"></label>
+              <label class="field"><span data-i18n="外网探测间隔（秒）">外网探测间隔（秒）</span><input name="probe.wan_interval" type="number" min="1" max="120"></label>
+            </div>
+            <label class="field"><span data-i18n="外网探测目标">外网探测目标</span>
+              <input name="probe.wan_targets" placeholder="223.5.5.5, 119.29.29.29">
+              <em data-i18n="多个 IP 用英文逗号分隔">多个 IP 用英文逗号分隔</em>
+            </label>
+            <label class="field"><span data-i18n="DNS 测试域名">DNS 测试域名</span>
+              <input name="probe.dns_targets" placeholder="www.baidu.com">
+            </label>
+            <div class="field-row">
+              <label class="field"><span data-i18n="采样间隔（秒）">采样间隔（秒）</span><input name="sample.interval" type="number" min="1" max="30"></label>
+              <label class="field"><span data-i18n="数据保留（天）">数据保留（天）</span><input name="retention.days" type="number" min="1" max="90"></label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span data-i18n="测速时长（秒）">测速时长（秒）</span><input name="speedtest.duration" type="number" min="3" max="20"></label>
+              <label class="field"><span data-i18n="上传测速大小（MB）">上传测速大小（MB）</span><input name="speedtest.upload_size_mb" type="number" min="1" max="100"></label>
+            </div>
+            <label class="field"><span data-i18n="下载测速地址">下载测速地址</span>
+              <input name="speedtest.download_urls" placeholder="https://mirrors.aliyun.com/ubuntu/ls-lR.gz">
+              <em data-i18n="多个地址用英文逗号分隔，测速前会挑最快的那个">多个地址用英文逗号分隔，测速前会挑最快的那个</em>
+            </label>
+            <label class="field"><span data-i18n="上传测速地址">上传测速地址</span>
+              <input name="speedtest.upload_urls" placeholder="https://httpbin.org/post">
+              <em data-i18n="留空则不测上行；地址需接受匿名 POST">留空则不测上行；地址需接受匿名 POST</em>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="btn primary" data-i18n="保存配置">保存配置</button>
+              <button type="button" class="btn" id="probe-now" data-i18n="立即探测">立即探测</button>
+              <span class="form-msg" id="form-msg"></span>
+            </div>
+          </form>
+        </article>
+
+        <article class="card col-6">
+          <div class="card-head"><h3 data-i18n="告警阈值">告警阈值</h3><span class="hint" data-i18n="连续命中才触发">连续命中才触发</span></div>
+          <form class="form" id="threshold-form">
+            <div class="field-row">
+              <label class="field"><span data-i18n="丢包率（%）">丢包率（%）</span><input name="thresholds.loss_pct" type="number" step="0.1" min="0"></label>
+              <label class="field"><span data-i18n="延迟（ms）">延迟（ms）</span><input name="thresholds.latency_ms" type="number" step="1" min="1"></label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span data-i18n="抖动（ms）">抖动（ms）</span><input name="thresholds.jitter_ms" type="number" step="1" min="1"></label>
+              <label class="field"><span data-i18n="CPU（%）">CPU（%）</span><input name="thresholds.cpu_pct" type="number" step="1" min="1"></label>
+            </div>
+            <div class="field-row">
+              <label class="field"><span data-i18n="内存（%）">内存（%）</span><input name="thresholds.mem_pct" type="number" step="1" min="1"></label>
+              <label class="field"><span data-i18n="磁盘（%）">磁盘（%）</span><input name="thresholds.disk_pct" type="number" step="1" min="1"></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn primary" data-i18n="保存阈值">保存阈值</button>
+              <span class="form-msg" id="threshold-msg"></span>
+            </div>
+          </form>
+
+          <div class="card-head mt"><h3 data-i18n="数据与导出">数据与导出</h3></div>
+          <div class="kv small" id="db-stats"></div>
+          <div class="form-actions">
+            <a class="btn" href="/api/export?target=gateway&range=24h" download data-i18n="导出网关 24h CSV">导出网关 24h CSV</a>
+            <a class="btn" href="/api/export?target=223.5.5.5&range=24h" download data-i18n="导出外网 24h CSV">导出外网 24h CSV</a>
+          </div>
+        </article>
+
+        <article class="card col-12">
+          <div class="card-head"><h3 data-i18n="运行信息">运行信息</h3></div>
+          <div class="kv grid-kv" id="about-info"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/js/i18n.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
