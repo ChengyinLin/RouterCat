@@ -2,6 +2,7 @@
 
 一个为 Ubuntu 打造的**路由器 / 链路状态监控面板**。
 纯 Python 标准库 + 原生前端，没有第三方依赖，装好 Ubuntu 解压即用，浏览器打开就能看。
+TG交流群： https://t.me/+EHfWkGgeYHk3MmE1
 
 ![总览](shots/overview.png)
 
