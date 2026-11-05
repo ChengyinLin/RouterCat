@@ -1,8 +1,7 @@
 # RouterCat · Ubuntu 路由器状态监控
 
-一个为 Ubuntu 打造的**路由器 / 链路状态监控面板**。
+一个参考 ServerCat 交互形态、为 Ubuntu 打造的**路由器 / 链路状态监控面板**。
 纯 Python 标准库 + 原生前端，没有第三方依赖，装好 Ubuntu 解压即用，浏览器打开就能看。
-TG交流群： https://t.me/+EHfWkGgeYHk3MmE1
 
 ![总览](shots/overview.png)
 
@@ -254,3 +253,5 @@ routercat/
 [MIT](LICENSE) —— 随便用、随便改，保留版权声明即可。
 
 > 仓库里**不含** `data/` 目录：那里面有你的本机 IP、网关 MAC、路由器序列号和历史样本，已在 `.gitignore` 里排除。克隆下来直接 `./run.sh`，运行时会自动重建。
+
+界面上出现的 Ubuntu 等发行版标志（`static/img/os/*.svg`）归各自商标持有人所有，这里只用于表明软件运行的系统环境。

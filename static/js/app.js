@@ -606,6 +606,11 @@
     gentoo: "G", deepin: "D", kylin: "K", uos: "U", elementary: "e", pop: "P",
   };
 
+  // 有官方标志的发行版放 logo（static/img/os/*.svg），其余用上面的首字母
+  const OS_LOGO = {
+    ubuntu: "/img/os/ubuntu.svg",
+  };
+
   const VIRT_TEXT = { hardware: "物理机", vm: "虚拟机", container: "容器" };
   const VIRT_CLS = { hardware: "ok", vm: "warn", container: "" };
   const FORM_TEXT = {
@@ -623,6 +628,28 @@
       .trim();
   }
 
+  // 徽章内容：认得出的发行版放官方标志，其余用首字母（logo 加载失败也回退字母）
+  function fillBadge(badge, osKey, name) {
+    const letter = OS_GLYPH[osKey] || (name[0] || "L").toUpperCase();
+    const src = OS_LOGO[osKey];
+    if (!src) {
+      badge.classList.remove("has-logo");
+      badge.textContent = letter;
+      return;
+    }
+    badge.classList.add("has-logo");
+    badge.innerHTML = `<img src="${src}" alt="${esc(name)}" draggable="false">`;
+    const img = badge.querySelector("img");
+    img.addEventListener(
+      "error",
+      () => {
+        badge.classList.remove("has-logo");
+        badge.textContent = letter;
+      },
+      { once: true }
+    );
+  }
+
   function renderHostCard(d) {
     const host = (d && d.host) || {};
     const sys = host.system || {};
@@ -636,7 +663,7 @@
     if (badge) {
       const c = OS_COLORS[osKey] || OS_COLORS.default;
       badge.dataset.os = osKey;
-      badge.textContent = OS_GLYPH[osKey] || (name[0] || "L").toUpperCase();
+      fillBadge(badge, osKey, name);
       badge.style.background = `linear-gradient(158deg, ${c[0]}, ${c[1]})`;
       badge.style.boxShadow = `0 16px 32px ${c[1]}55, inset 0 1px 0 rgba(255,255,255,.28)`;
     }
