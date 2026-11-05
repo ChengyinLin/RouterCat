@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 语法检查 + 启动冒烟
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 项目零第三方依赖，只需要语法过关
+      - name: 编译检查
+        run: python -m compileall -q routercat server.py
+
+      - name: 版本号
+        run: python -c "import routercat; print('RouterCat', routercat.__version__)"
+
+      # 起一个真实服务，确认能监听、能返回快照（不依赖外网）
+      - name: 启动冒烟测试
+        run: |
+          python server.py --host 127.0.0.1 --port 8899 --verbose > /tmp/rc.log 2>&1 &
+          for i in $(seq 1 20); do
+            sleep 1
+            if curl -sf http://127.0.0.1:8899/api/health > /tmp/health.json; then break; fi
+          done
+          cat /tmp/health.json
+          curl -sf http://127.0.0.1:8899/api/overview > /tmp/overview.json
+          python - <<'PY'
+          import json
+          h = json.load(open("/tmp/health.json"))
+          assert h["ok"] is True, h
+          o = json.load(open("/tmp/overview.json"))
+          for key in ("status", "host", "router", "ui", "alerts"):
+              assert key in o, f"缺少字段 {key}"
+          assert "system" in o["host"], "host.system 未识别"
+          print("冒烟通过：", h["version"], o["host"]["system"]["pretty"])
+          PY
+          kill $! 2>/dev/null || true
